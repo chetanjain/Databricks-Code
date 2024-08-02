@@ -1,0 +1,15 @@
+#df = spark.createDataFrame(
+#     [
+#         (1, "2m 20s"),  # create your data here, be consistent in the types.
+#         (2,"2h 30m 12s"),
+#         (3,"41s")
+#     ],
+#     ["id", "duration"]  # add your column names here
+# )
+
+split_col = split('duration',' ')
+df = df.select('duration')
+
+display(df.withColumn('hours', when(split_col.getItem(0).endswith('h'), split_col.getItem(0)).otherwise(lit(0)))\
+  .withColumn('minutes', when(split_col.getItem(0).endswith('m'), split_col.getItem(0)).when(split_col.getItem(1).endswith('m'), split_col.getItem(1)).otherwise(lit(0)))\
+  .withColumn('seconds', when(split_col.getItem(0).endswith('s'), split_col.getItem(0)).when(split_col.getItem(1).endswith('s'), split_col.getItem(1)).when(split_col.getItem(2).endswith('s'), split_col.getItem(2)).otherwise(lit(0))))
