@@ -1,0 +1,4 @@
+from pyspark.sql import functions as sf
+df = sc.parallelize([['a','bbbbb','ccc','ddd'],['aaaa','bbb','ccccccc', 'dddd']]).toDF(["column1", "column2", "column3", "column4"])
+df1 = df.select([sf.length(col).alias(col) for col in df.columns])
+df1.groupby().max().show()
