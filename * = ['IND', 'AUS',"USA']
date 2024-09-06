@@ -1,0 +1,26 @@
+prod_ship_id	loc	amt
+176	*	1000
+874	IND	4000
+455	*	5000
+455	AUS	6000
+
+* = ['IND', 'AUS',"USA']
+
+prod_ship_id	loc	amt
+176	IND				1000
+176	AUS				1000
+176	USA				1000
+874	IND				4000
+455	IND				5000
+455	USA				5000
+455	AUS				6000
+
+from pyspark.sql.functions import when,col,lit,split,regexp_replace
+df = spark.createDataFrame([(176	,'*',	1000),(874,'IND',4000),(455,	'*'	,5000),(455,'AUS',6000)],['prod_ship_id','loc','amt'])
+df2 = df.withColumn('loc', when(col("loc") == '*',lit("['IND','AUS','USA']")).otherwise(col('loc')))
+df3 = df2.withColumn('loc',split(regexp_replace(regexp_replace(regexp_replace(col('loc'),'\\[',''),'\\]',''),"'",''),','))
+df4 = df3.withColumn('loc',explode(col('loc')))
+from pyspark.sql.window import Window
+from pyspark.sql.functions import row_number,desc
+windowSpec  = Window.partitionBy("prod_ship_id","loc").orderBy(desc("amt"))
+final_df = df4.withColumn("row_number",row_number().over(windowSpec)).filter('row_number==1')
